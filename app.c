@@ -78,7 +78,6 @@ SL_WEAK void app_init(void)
   // Init temperature sensor.
   sl_sensor_rht_init();
 
-
 }
 
 #ifndef SL_CATALOG_KERNEL_PRESENT
@@ -116,8 +115,10 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
     case sl_bt_evt_system_boot_id:
 
       sl_led_turn_on(&sl_led_led0);
-      MAX31865_RTD_configure( true, true, false, true, MAX31865_FAULT_DETECTION_NONE,
-                              true, true, 0x0000, 0x7fff );//( true, true, true, MAX31865_FAULT_DETECTION_NONE);
+
+      MAX31865_RTD_configure( true, true, false, true, MAX31865_FAULT_DETECTION_NONE,true, true, 0x0000, 0x7fff );//( true, true, true, MAX31865_FAULT_DETECTION_NONE);
+
+
 
       // Print boot message.
       app_log_info("Bluetooth stack booted: v%d.%d.%d-b%d\n",
@@ -174,6 +175,11 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
         sl_bt_advertiser_connectable_scannable);
       app_assert_status(sc);
       app_log_info("Started advertising\n");
+
+      sl_led_turn_on(&sl_led_led0);
+
+      MAX31865_RTD_read_all();
+
       break;
 
     // -------------------------------

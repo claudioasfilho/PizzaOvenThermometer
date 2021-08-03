@@ -92,6 +92,8 @@ void MAX31865_RTD_configure( bool v_bias, bool conversion_mode, bool one_shot,bo
                               bool filter_50hz, uint16_t low_threshold,
                               uint16_t high_threshold );
 
+uint8_t MAX31865_RTD_read_all();
+
 typedef struct {
   uint8_t  configuration_control_bits;
   uint16_t configuration_low_threshold;
@@ -105,6 +107,7 @@ typedef struct {
   uint16_t measured_low_threshold;
   uint8_t  measured_status;
   uint8_t  output_buffer[10];
+  uint8_t  input_buffer[10];
   uint8_t  output_buffer_size;
 
 
