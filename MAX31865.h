@@ -86,7 +86,10 @@
 #define RTD_ADC_RESOLUTION  ( 1u << 15 ) /* 15 bits */
 
 void MAX31865_RTD_reconfigure( bool full );
-void MAX31865_RTD_configure(bool v_bias, bool conversion_mode, bool one_shot, uint8_t fault_cycle );
+void MAX31865_RTD_configure_partial(bool v_bias, bool conversion_mode, bool one_shot, uint8_t fault_cycle );
+void MAX31865_RTD_configure( bool v_bias, bool conversion_mode, bool one_shot,bool three_wire, uint8_t fault_cycle, bool fault_clear,
+                              bool filter_50hz, uint16_t low_threshold,
+                              uint16_t high_threshold );
 
 typedef struct {
   uint8_t  configuration_control_bits;

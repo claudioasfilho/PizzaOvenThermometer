@@ -67,8 +67,7 @@ static void app_periodic_timer_cb(sl_simple_timer_t *timer, void *data);
 
 #include "spidrv.h"
 
-//SPIDRV_HandleData_t handleData;
-//SPIDRV_Handle_t handle = &handleData;
+//Handler initialized on an auto-Generated file for the SPI
 extern SPIDRV_Handle_t sl_spidrv_MAX31865_handle;
 
 void TransferComplete(SPIDRV_Handle_t handle,
@@ -98,32 +97,19 @@ void MAX31865_RTD_reconfigure( bool full )
   {
     uint16_t threshold ;
 
-
-    RTDSensor.output_buffer[0] = 0x83;
-    RTDSensor.output_buffer_size ++;
-
+    RTDSensor.output_buffer[RTDSensor.output_buffer_size++] = 0x83;
     threshold = RTDSensor.configuration_high_threshold ;
-
-    RTDSensor.output_buffer[1] = (( threshold >> 8 ) & 0x00ff );
-    RTDSensor.output_buffer_size ++;
-    RTDSensor.output_buffer[2] =    threshold        & 0x00ff;
-    RTDSensor.output_buffer_size ++;
+    RTDSensor.output_buffer[RTDSensor.output_buffer_size++] = (( threshold >> 8 ) & 0x00ff );
+    RTDSensor.output_buffer[RTDSensor.output_buffer_size++] =    threshold        & 0x00ff;
     threshold = RTDSensor.configuration_low_threshold ;
-    RTDSensor.output_buffer[3] = ( ( threshold >> 8 ) & 0x00ff );
-    RTDSensor.output_buffer_size ++;
-    RTDSensor.output_buffer[4] =   threshold        & 0x00ff;
-    RTDSensor.output_buffer_size ++;
+    RTDSensor.output_buffer[RTDSensor.output_buffer_size++] = ( ( threshold >> 8 ) & 0x00ff );
+    RTDSensor.output_buffer[RTDSensor.output_buffer_size++] =   threshold        & 0x00ff;
 
   }
 
   /* Write the configuration to the MAX31865. */
-  else
-  {
-    RTDSensor.output_buffer[0] =  0x80 ;
-    RTDSensor.output_buffer_size++;
-    RTDSensor.output_buffer[1] = RTDSensor.configuration_control_bits;
-    RTDSensor.output_buffer_size++;
-  }
+  RTDSensor.output_buffer[RTDSensor.output_buffer_size++] =  0x80 ;
+  RTDSensor.output_buffer[RTDSensor.output_buffer_size++] = RTDSensor.configuration_control_bits;
   SPIDRV_MTransmit(sl_spidrv_MAX31865_handle, RTDSensor.output_buffer, RTDSensor.output_buffer_size, TransferComplete);
 }
 
@@ -138,7 +124,7 @@ void MAX31865_RTD_reconfigure( bool full )
  * @param [in] fault_detection Fault detection cycle control (see Table 3 in the MAX31865
  *             datasheet).
 */
-void MAX31865_RTD_configure( bool v_bias, bool conversion_mode, bool one_shot, uint8_t fault_cycle )
+void MAX31865_RTD_configure_partial( bool v_bias, bool conversion_mode, bool one_shot, uint8_t fault_cycle )
 {
   /* Use the stored the control bits, and set new ones only */
   RTDSensor.configuration_control_bits &= ~ (0x80 | 0x40 | 0x20 | 0b00001100);
@@ -150,6 +136,49 @@ void MAX31865_RTD_configure( bool v_bias, bool conversion_mode, bool one_shot, u
 
   /* Perform light configuration */
   MAX31865_RTD_reconfigure( false );
+}
+
+/**
+ * Configure the MAX31865.  The parameters correspond to Table 2 in the MAX31865
+ * datasheet.  The parameters are combined into a control bit-field that is stored
+ * internally in the class for later reconfiguration, as are the fault threshold values.
+ *
+ * @param [in] v_bias Vbias enabled (@a true) or disabled (@a false).
+ * @param [in] conversion_mode Conversion mode auto (@a true) or off (@a false).
+ * @param [in] one_shot 1-shot measurement enabled (@a true) or disabled (@a false).
+ * @param [in] three_wire 3-wire enabled (@a true) or 2-wire/4-wire (@a false).
+ * @param [in] fault_detection Fault detection cycle control (see Table 3 in the MAX31865
+ *             datasheet).
+ * @param [in] fault_clear Fault status auto-clear (@a true) or manual clear (@a false).
+ * @param [in] filter_50hz 50 Hz filter enabled (@a true) or 60 Hz filter enabled
+ *             (@a false).
+ * @param [in] low_threshold Low fault threshold.
+ * @param [in] high_threshold High fault threshold.
+*/
+void MAX31865_RTD_configure( bool v_bias, bool conversion_mode, bool one_shot,
+                              bool three_wire, uint8_t fault_cycle, bool fault_clear,
+                              bool filter_50hz, uint16_t low_threshold,
+                              uint16_t high_threshold )
+{
+  uint8_t control_bits = 0;
+
+  /* Assemble the control bit mask. */
+  control_bits |= ( v_bias ? 0x80 : 0 );
+  control_bits |= ( conversion_mode ? 0x40 : 0 );
+  control_bits |= ( one_shot ? 0x20 : 0 );
+  control_bits |= ( three_wire ? 0x10 : 0 );
+  control_bits |= fault_cycle & 0b00001100;
+  control_bits |= ( fault_clear ? 0x02 : 0 );
+  control_bits |= ( filter_50hz ? 0x01 : 0 );
+
+  /* Store the control bits and the fault threshold limits for reconfiguration
+     purposes. */
+  RTDSensor.configuration_control_bits   = control_bits;
+  RTDSensor.configuration_low_threshold  = low_threshold;
+  RTDSensor.configuration_high_threshold = high_threshold;
+
+  /* Perform an full reconfiguration */
+  MAX31865_RTD_reconfigure( true );
 }
 
 
@@ -215,7 +244,8 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
     case sl_bt_evt_system_boot_id:
 
       sl_led_turn_on(&sl_led_led0);
-      MAX31865_RTD_configure( true, true, true, MAX31865_FAULT_DETECTION_NONE);
+      MAX31865_RTD_configure( true, true, false, true, MAX31865_FAULT_DETECTION_NONE,
+                              true, true, 0x0000, 0x7fff );//( true, true, true, MAX31865_FAULT_DETECTION_NONE);
 
       // Print boot message.
       app_log_info("Bluetooth stack booted: v%d.%d.%d-b%d\n",
