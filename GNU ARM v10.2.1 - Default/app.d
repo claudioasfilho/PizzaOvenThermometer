@@ -137,7 +137,8 @@ app.o: ../app.c \
  /Users/clfilho/SimplicityStudio/May_21/PizzaOvenThermometer/config/spidrv_config.h \
  /Applications/SimplicityStudio5.app/Contents/Eclipse/developer/sdks/gecko_sdk_suite/v3.2//platform/emdrv/dmadrv/inc/dmadrv.h \
  /Applications/SimplicityStudio5.app/Contents/Eclipse/developer/sdks/gecko_sdk_suite/v3.2//platform/emlib/inc/em_ldma.h \
- /Users/clfilho/SimplicityStudio/May_21/PizzaOvenThermometer/config/dmadrv_config.h
+ /Users/clfilho/SimplicityStudio/May_21/PizzaOvenThermometer/config/dmadrv_config.h \
+ /Users/clfilho/SimplicityStudio/May_21/PizzaOvenThermometer/autogen/sl_spidrv_instances.h
 /Applications/SimplicityStudio5.app/Contents/Eclipse/developer/sdks/gecko_sdk_suite/v3.2//platform/common/toolchain/inc/sl_gcc_preinclude.h:
 /Applications/SimplicityStudio5.app/Contents/Eclipse/developer/sdks/gecko_sdk_suite/v3.2//platform/emlib/inc/em_common.h:
 /Applications/SimplicityStudio5.app/Contents/Eclipse/developer/sdks/gecko_sdk_suite/v3.2//platform/Device/SiliconLabs/EFR32BG22/Include/em_device.h:
@@ -278,3 +279,4 @@ app.o: ../app.c \
 /Applications/SimplicityStudio5.app/Contents/Eclipse/developer/sdks/gecko_sdk_suite/v3.2//platform/emdrv/dmadrv/inc/dmadrv.h:
 /Applications/SimplicityStudio5.app/Contents/Eclipse/developer/sdks/gecko_sdk_suite/v3.2//platform/emlib/inc/em_ldma.h:
 /Users/clfilho/SimplicityStudio/May_21/PizzaOvenThermometer/config/dmadrv_config.h:
+/Users/clfilho/SimplicityStudio/May_21/PizzaOvenThermometer/autogen/sl_spidrv_instances.h:

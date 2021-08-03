@@ -35,7 +35,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
+#include "spidrv.h"
+#include "sl_spidrv_instances.h"
 
 #define MAX31865_FAULT_HIGH_THRESHOLD  ( 1 << 7 )
 #define MAX31865_FAULT_LOW_THRESHOLD   ( 1 << 6 )
@@ -108,5 +109,7 @@ typedef struct {
 
 
 }MAX31865;
+
+extern SPIDRV_Handle_t sl_spidrv_MAX31865_handle;
 
 #endif /* _MAX31865_H */
