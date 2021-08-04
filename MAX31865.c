@@ -26,6 +26,8 @@
 #include "MAX31865.h"
 #include "sl_simple_led_instances.h"
 #include "app.h"
+#include <math.h>
+
 
 bool transmission_done = 0;
 
@@ -168,9 +170,12 @@ uint8_t MAX31865_RTD_read_all()
 
   transmission_done = 0;
   /* Tell the MAX31865 that we want to read, starting at register 0. */
+  //Non Blocking call to transfer data over SPI
   //SPIDRV_MTransfer( sl_spidrv_MAX31865_handle,RTDSensor.output_buffer,RTDSensor.input_buffer,RTDSensor.output_buffer_size,TransferComplete);
+
+  //Blocking call to transfer data over SPI
   SPIDRV_MTransferB( sl_spidrv_MAX31865_handle,RTDSensor.output_buffer,RTDSensor.input_buffer,RTDSensor.output_buffer_size);
-//  while(transmission_done == 0);
+
 
   RTDSensor.measured_configuration = RTDSensor.input_buffer[1];
 
@@ -198,3 +203,79 @@ uint8_t MAX31865_RTD_read_all()
   return( RTDSensor.measured_status );
 }
 
+uint8_t MAX31865_RTD_fault_status()
+{
+  uint8_t fault_status ;
+
+  /* Initializes Byte Counter for Transmission/Receive process */
+  RTDSensor.output_buffer_size = 0;
+  /* Tell the MAX31865 that we want to read, starting at register 7. */
+  RTDSensor.output_buffer[RTDSensor.output_buffer_size++] = 0x07;
+  RTDSensor.output_buffer[RTDSensor.output_buffer_size++] = 0x00;
+  //Blocking call to transfer data over SPI
+  SPIDRV_MTransferB( sl_spidrv_MAX31865_handle,RTDSensor.output_buffer,RTDSensor.input_buffer,RTDSensor.output_buffer_size);
+
+  fault_status = RTDSensor.input_buffer[1];
+
+  return( fault_status );
+}
+
+
+/**
+ * The constructor for the MAX31865_RTD class registers the CS pin and
+ * configures it as an output.
+ *
+ * @param [in] type type of RTD .
+ * @param [in] cs_pin Arduino pin selected for the CS signal.
+ * @param [in] rtd_rref reference resistor value. if omitted will be setup to default
+              400 for PT100 and 4000 for PT1000
+ */
+void MAX31865_RTD_Sensor_Type( PTDTYPE type)
+{
+  /* Set the type of PTD. */
+  RTDSensor.type = type;
+
+    RTDSensor.configuration_rtd_rref = type == RTD_PT100 ? RTD_RREF_PT100 : RTD_RREF_PT1000;
+}
+
+uint16_t raw_resistance( )
+{ return(  RTDSensor.measured_resistance ); }
+
+double resistance( )
+{
+  return( (double)raw_resistance( ) * RTDSensor.configuration_rtd_rref / (double)RTD_ADC_RESOLUTION );
+}
+
+/**
+ * Apply the Callendar-Van Dusen equation to convert the RTD resistance
+ * to temperature:
+ *
+ *   \f[
+ *   t=\frac{-A\pm \sqrt{A^2-4B\left(1-\frac{R_t}{R_0}\right)}}{2B}
+ *   \f],
+ *
+ * where
+ *
+ * \f$A\f$ and \f$B\f$ are the RTD coefficients, \f$R_t\f$ is the current
+ * resistance of the RTD, and \f$R_0\f$ is the resistance of the RTD at 0
+ * degrees Celcius.
+ *
+ * For more information on measuring with an RTD, see:
+ * <http://newton.ex.ac.uk/teaching/CDHW/Sensors/an046.pdf>.
+ *
+ * @param [in] resistance The measured RTD resistance.
+ * @return Temperature in degrees Celcius.
+ */
+double MAX31865_RTD_temperature()
+{
+  static const double a2   = 2.0 * RTD_B;
+  static const double b_sq = RTD_A * RTD_A;
+
+  const double rtd_resistance = ( RTDSensor.configuration_rtd_rref == RTD_PT100 )? RTD_RESISTANCE_PT100 : RTD_RESISTANCE_PT1000;
+
+  double c = 1.0 - resistance( ) / rtd_resistance;
+  double D = b_sq - 2.0 * a2 * c;
+  double temperature_deg_C = ( -RTD_A + sqrt( D ) ) / a2;
+
+  return( temperature_deg_C );
+}

@@ -86,13 +86,8 @@
 
 #define RTD_ADC_RESOLUTION  ( 1u << 15 ) /* 15 bits */
 
-void MAX31865_RTD_reconfigure( bool full );
-void MAX31865_RTD_configure_partial(bool v_bias, bool conversion_mode, bool one_shot, uint8_t fault_cycle );
-void MAX31865_RTD_configure( bool v_bias, bool conversion_mode, bool one_shot,bool three_wire, uint8_t fault_cycle, bool fault_clear,
-                              bool filter_50hz, uint16_t low_threshold,
-                              uint16_t high_threshold );
-
-uint8_t MAX31865_RTD_read_all();
+//Structure that holds the Sensor Registers
+  typedef enum     Pdm_type { RTD_PT100, RTD_PT1000 }PTDTYPE;
 
 typedef struct {
   uint8_t  configuration_control_bits;
@@ -109,9 +104,26 @@ typedef struct {
   uint8_t  output_buffer[10];
   uint8_t  input_buffer[10];
   uint8_t  output_buffer_size;
+  PTDTYPE type;
 
 
 }MAX31865;
+
+
+//Functions
+
+void MAX31865_RTD_reconfigure( bool full );
+void MAX31865_RTD_configure_partial(bool v_bias, bool conversion_mode, bool one_shot, uint8_t fault_cycle );
+void MAX31865_RTD_configure( bool v_bias, bool conversion_mode, bool one_shot,bool three_wire, uint8_t fault_cycle, bool fault_clear,
+                              bool filter_50hz, uint16_t low_threshold,
+                              uint16_t high_threshold );
+
+uint8_t MAX31865_RTD_read_all();
+uint8_t MAX31865_RTD_fault_status();
+
+double MAX31865_RTD_temperature();
+
+
 
 extern SPIDRV_Handle_t sl_spidrv_MAX31865_handle;
 

@@ -116,6 +116,8 @@ void sl_bt_on_event(sl_bt_msg_t *evt)
 
       sl_led_turn_on(&sl_led_led0);
 
+      MAX31865_RTD_Sensor_Type(RTD_PT100);
+
       MAX31865_RTD_configure( true, true, false, true, MAX31865_FAULT_DETECTION_NONE,true, true, 0x0000, 0x7fff );//( true, true, true, MAX31865_FAULT_DETECTION_NONE);
 
 
@@ -306,12 +308,16 @@ static void app_periodic_timer_cb(sl_simple_timer_t *timer, void *data)
   float tmp_c = 0.0;
   // float tmp_f = 0.0;
 
+
+  MAX31865_RTD_read_all();
+
   // Measure temperature; units are % and milli-Celsius.
   sc = sl_sensor_rht_get(&humidity, &temperature);
   if (sc != SL_STATUS_OK) {
     app_log_warning("Invalid RHT reading: %lu %ld\n", humidity, temperature);
   }
 
+  temperature = MAX31865_RTD_temperature();
   // button 0 pressed: overwrite temperature with -20C.
   if (app_btn0_pressed) {
     temperature = -20 * 1000;
